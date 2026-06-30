@@ -6,12 +6,13 @@ if (!process.env.GAMES) throw new Error('GAMES environment variable not set!')
 const cookies = process.env.COOKIE.split('\n').map(s => s.trim())
 const games = process.env.GAMES.split('\n').map(s => s.trim())
 const discordWebhook = process.env.DISCORD_WEBHOOK
-const discordUser = process.env.DISCORD_USER
-const telegramToken = process.env.TELEGRAM_TOKEN
-const telegramChat = process.env.TELEGRAM_CHAT_ID
-const msgDelimiter = ':'
+const discordUser = process.env.DISCORD_USER?.trim()
+const telegramToken = process.env.TELEGRAM_TOKEN?.trim()
+const telegramChat = process.env.TELEGRAM_CHAT_ID?.trim()
 const icon = { info: '✅', error: '❌' }
 const messages = []
+// Date in UTC+8 (the cron's timezone) so a 06:00 run isn't labelled yesterday's UTC date
+const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai' }).format(new Date())
 const endpoints = {
   zzz: 'https://sg-act-nap-api.hoyolab.com/event/luna/zzz/os/sign?act_id=e202406031448091',
   gi:  'https://sg-hk4e-api.hoyolab.com/event/sol/sign?act_id=e202102251931481',
@@ -139,7 +140,7 @@ function log(type, ...data) {
 
   // Prefix game-specific lines with the upcased code (e.g. `GI:`) for scannability
   if(data[0] in endpoints) {
-    data[0] = data[0].toUpperCase() + msgDelimiter
+    data[0] = data[0].toUpperCase() + ':'
   }
 
   const string = data
@@ -155,6 +156,27 @@ function log(type, ...data) {
   messages.push({ type, string })
 }
 
+/**
+ * Builds the notification body shared by Discord and Telegram so the two never
+ * drift. Header shows overall status + UTC+8 date; `👤` marks each account
+ * section; result lines keep their ✅/❌. Only info/error entries reach
+ * `messages` (debug returns early), so no cookie/raw response can leak here.
+ * @returns {string}
+ */
+function formatReport() {
+  const header = hasErrors
+    ? `❌ Daily check-in · ${today} — error`
+    : `📅 Daily check-in · ${today}`
+
+  const body = messages
+    .map(msg => msg.type === 'header'
+      ? `\n👤 ${msg.string}`
+      : `${icon[msg.type] ?? ''} ${msg.string}`)
+    .join('\n')
+
+  return `${header}\n${body}`
+}
+
 // must be function to return early
 async function discordWebhookSend() {
   log('debug', '\n----- DISCORD WEBHOOK -----')
@@ -163,11 +185,8 @@ async function discordWebhookSend() {
     log('error', 'DISCORD_WEBHOOK is not a Discord webhook URL. Must start with `https://discord.com/api/webhooks/`')
     return
   }
-  let discordMsg = ""
-  if (discordUser) {
-      discordMsg = `<@${discordUser}>\n`
-  }
-  discordMsg += messages.map(msg => `${icon[msg.type] ?? ''} ${msg.string}`).join('\n')
+  const mention = discordUser ? `<@${discordUser}>\n` : ''
+  const discordMsg = mention + formatReport()
 
   const res = await fetch(discordWebhook, {
     method: 'POST',
@@ -196,7 +215,7 @@ async function telegramSend() {
     return
   }
 
-  const text = messages.map(msg => `${icon[msg.type] ?? ''} ${msg.string}`).join('\n')
+  const text = formatReport()
 
   const res = await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
     method: 'POST',
@@ -209,11 +228,17 @@ async function telegramSend() {
     return
   }
 
-  log('error', 'Error sending message to Telegram, please check TELEGRAM_TOKEN and TELEGRAM_CHAT_ID')
+  // Surface Telegram's own reason (e.g. "chat not found", "Unauthorized") — the
+  // description names the exact fix. Body is from Telegram, never our token.
+  const json = await res.json().catch(() => ({}))
+  log('error', `Error sending message to Telegram: ${json.description || res.status}. Check TELEGRAM_TOKEN and TELEGRAM_CHAT_ID`)
 }
 
 for (const index in cookies) {
-  log('info', `-- CHECKING IN FOR ACCOUNT ${Number(index) + 1} --`)
+  const account = Number(index) + 1
+  console.info(`\n-- CHECKING IN FOR ACCOUNT ${account} --`)
+  // ponytail: structural marker so formatReport() renders a `👤 Account N` header
+  messages.push({ type: 'header', string: `Account ${account}` })
   await run(cookies[index], games[index])
 }
 
