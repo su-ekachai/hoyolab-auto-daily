@@ -2,7 +2,7 @@ name: Latest version
 
 on:
   schedule:
-    - cron: "0 18 * * *" # scheduled at 06:00 (UTC+8) everyday
+    - cron: "0 18 * * *" # 02:00 UTC+8 / 01:00 UTC+7 — upstream version poll, reset time irrelevant
   workflow_dispatch:
 
 permissions: {}

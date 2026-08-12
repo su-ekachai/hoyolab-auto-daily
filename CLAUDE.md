@@ -7,7 +7,7 @@ Actions cron — there is no local server, no build, no test suite. Keep it that
 unless a feature genuinely needs more.
 
 ## Run it
-- CI: `.github/workflows/login.yml` runs `node index.js` daily (06:00 UTC+8).
+- CI: `.github/workflows/login.yml` runs `node index.js` daily (00:20 UTC+8).
 - Local: `COOKIE=... GAMES=... node index.js` (Node 20+, no `npm install` needed).
 - `version.yml` just compares `package.json` version against upstream `sglkc/hoyolab-auto-daily`.
 
