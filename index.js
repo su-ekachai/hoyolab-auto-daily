@@ -9,6 +9,11 @@ const discordWebhook = process.env.DISCORD_WEBHOOK
 const discordUser = process.env.DISCORD_USER?.trim()
 const telegramToken = process.env.TELEGRAM_TOKEN?.trim()
 const telegramChat = process.env.TELEGRAM_CHAT_ID?.trim()
+// Locale sent to the check-in API, which decides the language of the reward
+// messages shown in-game and in the HoYoLAB check-in history.
+// `||` (not `??`) is intentional: an unset repository variable is injected as an
+// empty string by Actions, and an empty `lang` would be sent to the API.
+const language = process.env.HOYOLAB_LANG?.trim() || 'en-us'
 const icon = { info: '✅', error: '❌' }
 const messages = []
 // Date in UTC+8 (the cron's timezone) so a 06:00 run isn't labelled yesterday's UTC date
@@ -53,10 +58,10 @@ async function run(cookie, games) {
     const url = new URL(endpoint)
     const actId = url.searchParams.get('act_id')
 
-    url.searchParams.set('lang', 'en-us')
+    url.searchParams.set('lang', language)
 
     const body = JSON.stringify({
-      lang: 'en-us',
+      lang: language,
       act_id: actId
     })
 

@@ -11,6 +11,7 @@ Repository version:
 - [Getting your cookie](#getting-your-cookie)
 - [Usage](#usage)
 - [Multiple Accounts](#multiple-accounts)
+- [Language](#language)
 - [Discord Webhook](#discord-webhook)
 - [Telegram](#telegram)
 - [FAQ](#faq)
@@ -118,6 +119,20 @@ You have to check in manually first to get your cookie, follow these steps (clic
   <img src="https://github.com/user-attachments/assets/99fd25cd-71f6-4aae-9949-11d055fadf73" />
   <img src="https://github.com/user-attachments/assets/4a56f4e1-8fb4-4137-acc6-ac30cade78f1" />
 </details>
+
+## Language
+
+Check in requests are made in English (`en-us`) by default. The language decides how
+HoYoLAB localizes the check in, so the reward messages you see in game and in the
+check in history follow it.
+
+To change it, create a new repository *variable* (Settings > Secrets and variables >
+Actions > Variables) named `HOYOLAB_LANG` with one of the values HoYoLAB supports:
+
+`zh-cn`, `zh-tw`, `de-de`, `en-us`, `es-es`, `fr-fr`, `id-id`, `it-it`, `ja-jp`,
+`ko-kr`, `pt-pt`, `ru-ru`, `th-th`, `tr-tr`, `vi-vn`
+
+Leaving the variable unset keeps the current `en-us` behaviour.
 
 ## Discord Webhook
 
