@@ -16,6 +16,8 @@ unless a feature genuinely needs more.
 - `GAMES` (var) — one space-separated line per account, e.g. `gi hsr zzz`
 - `DISCORD_WEBHOOK`, `DISCORD_USER` (optional) — Discord notifications.
 - `TELEGRAM_TOKEN`, `TELEGRAM_CHAT_ID` (optional) — Telegram notifications. Independent of Discord.
+- `HOYOLAB_LANG` (var, optional) — locale sent to the check-in API, defaults to `en-us`.
+  Only affects HoYoLAB's own reward text; notification wording stays English.
 
 ## Conventions
 - Zero runtime dependencies. Use native `fetch`/`URL`. **Do not add npm packages**
